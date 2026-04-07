@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSEM 141 – BAC Calculator</title>
+<style>
+  :root{--red:#991200;--dred:#6b0d00;--lred:#f9ecea;--green:#1a7a3c;--lgreen:#eaf5ee;--orange:#c05000;--lorange:#fff3e8;--gray:#4a4a4a;--border:#ddd;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;background:#f2f2f2;color:var(--gray);min-height:100vh;}
+  header{background:var(--red);color:white;padding:16px 24px;text-align:center;}
+  header h1{font-size:1.3rem;}
+  header p{font-size:0.83rem;opacity:0.85;margin-top:3px;}
+  .container{max-width:720px;margin:0 auto;padding:24px 16px 48px;}
+  .card{background:white;border-radius:12px;padding:22px 24px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .card h2{color:var(--red);font-size:1.1rem;margin-bottom:6px;}
+  .card .sub{font-size:.85rem;color:#888;margin-bottom:18px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  @media(max-width:520px){.form-grid{grid-template-columns:1fr;}}
+  label{display:block;font-weight:bold;font-size:.88rem;color:#555;margin-bottom:5px;}
+  input,select{width:100%;border:2px solid var(--border);border-radius:8px;padding:10px 13px;font-size:1rem;font-family:Arial,sans-serif;transition:border-color .15s;}
+  input:focus,select:focus{outline:none;border-color:var(--red);}
+  .hint{font-size:.76rem;color:#999;margin-top:4px;}
+  .btn{background:var(--red);color:white;border:none;border-radius:10px;padding:13px 28px;font-size:1rem;font-weight:bold;font-family:Arial,sans-serif;cursor:pointer;transition:background .2s;margin-top:4px;}
+  .btn:hover{background:var(--dred);}
+
+  .result{display:none;margin-top:22px;border-radius:12px;padding:22px;text-align:center;}
+  .result.show{display:block;}
+  .bac-num{font-size:3.8rem;font-weight:bold;line-height:1;}
+  .bac-unit{font-size:.95rem;margin-top:4px;opacity:.8;}
+  .bac-status{font-size:1.1rem;font-weight:bold;margin-top:12px;}
+  .bac-detail{font-size:.9rem;margin-top:10px;line-height:1.6;opacity:.9;}
+  .sober{background:var(--lgreen);border:2px solid var(--green);color:#135c2e;}
+  .low{background:#fffbea;border:2px solid #c9a800;color:#5a4000;}
+  .medium{background:var(--lorange);border:2px solid var(--orange);color:#5a2000;}
+  .high{background:#fdecea;border:2px solid #c0392b;color:#5a0000;}
+  .danger{background:#2a0000;border:2px solid #800;color:#ffcccc;}
+
+  .timeline{display:none;margin-top:20px;}
+  .timeline.show{display:block;}
+  .timeline h3{color:var(--red);font-size:.95rem;margin-bottom:10px;}
+  .trow{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.85rem;}
+  .ttime{width:52px;color:#888;flex-shrink:0;}
+  .ttrack{flex:1;background:#eee;border-radius:4px;height:18px;overflow:hidden;}
+  .tfill{height:100%;border-radius:4px;transition:width .4s;}
+  .tval{width:68px;text-align:right;font-weight:bold;color:#555;}
+  .tnow{color:#000!important;font-weight:bold;}
+
+  .formula{background:#f5f5f5;border-radius:8px;padding:14px 18px;margin-top:18px;font-size:.83rem;color:#666;line-height:1.7;}
+  .formula strong{color:var(--red);}
+  .warn{background:#fff8e1;border-left:4px solid #f0c040;border-radius:4px;padding:10px 14px;margin-top:14px;font-size:.82rem;color:#555;line-height:1.5;}
+  footer{text-align:center;padding:20px;color:#bbb;font-size:.77rem;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧮 BAC Calculator</h1>
+  <p>GSEM 141 — Understanding Alcohol Use Disorder · Samantha Skinner, PhD Candidate</p>
+</header>
+<div class="container">
+  <div class="card">
+    <h2>Estimate Your Blood Alcohol Concentration</h2>
+    <p class="sub">Uses the Widmark formula. For educational purposes only — your data never leaves your device.</p>
+
+    <div class="form-grid">
+      <div>
+        <label for="wt">Body Weight (kg)</label>
+        <input type="number" id="wt" placeholder="e.g. 68" min="30" max="300">
+        <div class="hint">1 lb ≈ 0.45 kg &nbsp;|&nbsp; e.g. 150 lb = 68 kg</div>
+      </div>
+      <div>
+        <label for="sx">Biological Sex</label>
+        <select id="sx">
+          <option value="">— Select —</option>
+          <option value="m">Male &nbsp;(Widmark r = 0.68)</option>
+          <option value="f">Female (Widmark r = 0.55)</option>
+        </select>
+        <div class="hint">Affects body water distribution</div>
+      </div>
+      <div>
+        <label for="dr">Number of Standard Drinks</label>
+        <input type="number" id="dr" placeholder="e.g. 3" min="0" max="30" step="0.5">
+        <div class="hint">1 drink = 14 g alcohol = 12 oz beer / 5 oz wine / 1.5 oz spirits</div>
+      </div>
+      <div>
+        <label for="hr">Hours Since First Drink</label>
+        <input type="number" id="hr" placeholder="e.g. 2" min="0" max="24" step="0.5">
+        <div class="hint">Liver clears ~0.015% BAC per hour</div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="calc()">Calculate BAC</button>
+
+    <div class="result" id="res">
+      <div class="bac-num" id="bacNum"></div>
+      <div class="bac-unit">Estimated Blood Alcohol Concentration (%)</div>
+      <div class="bac-status" id="bacStatus"></div>
+      <div class="bac-detail" id="bacDetail"></div>
+    </div>
+
+    <div class="timeline" id="tl">
+      <h3>BAC Timeline From First Drink</h3>
+      <div id="tlRows"></div>
+    </div>
+
+    <div class="formula">
+      <strong>Widmark Formula:</strong><br>
+      BAC = (Drinks × 14 g) ÷ (Weight<sub>kg</sub> × r × 10) − (0.015 × Hours)<br><br>
+      <strong>r</strong> = body water constant (0.68 male / 0.55 female)<br>
+      <strong>0.015%/hr</strong> = average hepatic elimination rate
+    </div>
+    <div class="warn">
+      ⚠️ This is an <em>estimate</em>. Actual BAC varies with food, hydration, medications, genetics, and individual metabolism. The only safe BAC before driving is <strong>0.00%</strong>.
+    </div>
+  </div>
+</div>
+<footer>GSEM 141 · Disease of the Brain · USC · For educational use only</footer>
+<script>
+function calc(){
+  const wt=parseFloat(document.getElementById('wt').value);
+  const sx=document.getElementById('sx').value;
+  const dr=parseFloat(document.getElementById('dr').value);
+  const hr=parseFloat(document.getElementById('hr').value);
+  if(!wt||!sx||isNaN(dr)||isNaN(hr)){alert('Please fill in all four fields.');return;}
+  if(wt<30||wt>350){alert('Please enter a realistic weight (30–350 kg).');return;}
+  const r=sx==='m'?0.68:0.55;
+  const peak=(dr*14)/(wt*r*10);
+  const bac=Math.max(0,peak-0.015*hr);
+
+  const res=document.getElementById('res');
+  document.getElementById('bacNum').textContent=bac.toFixed(3)+'%';
+
+  let cls,status,detail;
+  if(bac<0.001){cls='sober';status='✅ Sober / Back to baseline';detail='No meaningful alcohol impairment at this level.';}
+  else if(bac<0.03){cls='sober';status='🟡 Very low — subtle effects only';detail='Mild relaxation possible. Cognition largely unaffected. Legally sober in all US states.';}
+  else if(bac<0.06){cls='low';status='🟡 Mild intoxication';detail='Mild euphoria, reduced inhibition, slight motor skill decrease. Most people feel "tipsy" here.';}
+  else if(bac<0.08){cls='low';status='🟠 Approaching legal driving limit';detail='Reduced judgment and reaction time. You may feel more confident than your actual ability — a dangerous gap.';}
+  else if(bac<0.15){cls='medium';status='🚨 Over the legal limit (≥ 0.08%)';detail='Clear impairment: slurred speech, coordination loss, slowed reaction time. Do not drive.';}
+  else if(bac<0.25){cls='high';status='⛔ Heavily intoxicated — serious risk';detail='Severely impaired. High risk of blackout, vomiting, and aspiration. Requires supervision.';}
+  else{cls='danger';status='🆘 DANGER — potentially life-threatening';detail='Risk of respiratory depression, loss of consciousness, and death. This is a medical emergency.';}
+
+  res.className='result show '+cls;
+  document.getElementById('bacStatus').textContent=status;
+  document.getElementById('bacDetail').textContent=detail;
+
+  // Timeline
+  const tlDiv=document.getElementById('tl');
+  const tlRows=document.getElementById('tlRows');
+  tlRows.innerHTML='';
+  tlDiv.className='timeline show';
+  const pts=[0,0.5,1,2,3,4,6,8];
+  const maxB=Math.max(peak,0.08);
+  pts.forEach(h=>{
+    const b=Math.max(0,peak-0.015*h);
+    const pct=Math.min(100,(b/maxB)*100);
+    const isNow=Math.abs(h-hr)<0.26;
+    let col='#4CAF50';
+    if(b>=0.25)col='#8b0000';
+    else if(b>=0.15)col='#c0392b';
+    else if(b>=0.08)col='#e67e22';
+    else if(b>=0.03)col='#f0c040';
+    const row=document.createElement('div');
+    row.className='trow';
+    row.innerHTML=`<div class="ttime">${h===0?'Start':h+'hr'}</div><div class="ttrack"><div class="tfill" style="width:${pct}%;background:${col}"></div></div><div class="tval ${isNow?'tnow':''}">${b.toFixed(3)}%${isNow?' ◀':''}</div>`;
+    tlRows.appendChild(row);
+  });
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>

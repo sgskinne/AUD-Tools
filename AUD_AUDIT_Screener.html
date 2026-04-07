@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSEM 141 – AUDIT Screener</title>
+<style>
+  :root{--red:#991200;--dred:#6b0d00;--lred:#f9ecea;--green:#1a7a3c;--lgreen:#eaf5ee;--orange:#c05000;--lorange:#fff3e8;--gray:#4a4a4a;--border:#ddd;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;background:#f2f2f2;color:var(--gray);min-height:100vh;}
+  header{background:var(--red);color:white;padding:16px 24px;text-align:center;}
+  header h1{font-size:1.3rem;}
+  header p{font-size:.83rem;opacity:.85;margin-top:3px;}
+  .container{max-width:720px;margin:0 auto;padding:24px 16px 48px;}
+  .intro{background:white;border-radius:12px;padding:18px 22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .intro h2{color:var(--red);font-size:1.05rem;margin-bottom:6px;}
+  .intro p{font-size:.87rem;color:#666;line-height:1.5;}
+
+  .progress{display:flex;gap:5px;margin:0 0 16px;flex-wrap:wrap;}
+  .dot{width:13px;height:13px;border-radius:50%;background:var(--border);transition:background .2s;}
+  .dot.done{background:var(--red);}
+
+  .qcard{background:white;border-radius:12px;padding:20px 22px;margin-bottom:13px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .qhead{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px;}
+  .qnum{background:var(--red);color:white;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:bold;flex-shrink:0;margin-top:1px;}
+  .qtext{font-weight:bold;font-size:.95rem;color:#1a1a1a;line-height:1.45;}
+  .opts{display:flex;flex-wrap:wrap;gap:8px;}
+  .opt{border:2px solid var(--border);border-radius:20px;padding:7px 15px;font-size:.84rem;cursor:pointer;background:#f8f8f8;transition:all .15s;font-family:Arial,sans-serif;color:var(--gray);}
+  .opt:hover{background:var(--lred);border-color:#c44;}
+  .opt.sel{background:var(--red);border-color:var(--red);color:white;font-weight:bold;}
+
+  .actions{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;}
+  .btn{background:var(--red);color:white;border:none;border-radius:10px;padding:13px 28px;font-size:1rem;font-weight:bold;font-family:Arial,sans-serif;cursor:pointer;transition:background .2s;}
+  .btn:hover{background:var(--dred);}
+  .btn.reset{background:#666;}
+  .btn.reset:hover{background:#444;}
+
+  .result{display:none;margin-top:20px;border-radius:12px;padding:24px;}
+  .result.show{display:block;}
+  .score-big{font-size:3.5rem;font-weight:bold;text-align:center;line-height:1;}
+  .score-of{text-align:center;font-size:.88rem;margin-top:3px;opacity:.75;}
+  .badge{margin:14px auto;padding:9px 22px;border-radius:30px;font-weight:bold;font-size:1.05rem;text-align:center;max-width:320px;}
+  .breakdown{margin-top:14px;font-size:.9rem;line-height:1.75;}
+  .result.r0{background:var(--lgreen);border:2px solid var(--green);color:#135c2e;}
+  .result.r0 .badge{background:var(--green);color:white;}
+  .result.r1{background:#fffbea;border:2px solid #c9a800;color:#5a4000;}
+  .result.r1 .badge{background:#c9a800;color:white;}
+  .result.r2{background:var(--lorange);border:2px solid var(--orange);color:#5a2000;}
+  .result.r2 .badge{background:var(--orange);color:white;}
+  .result.r3{background:#fdecea;border:2px solid #c0392b;color:#5a0000;}
+  .result.r3 .badge{background:#c0392b;color:white;}
+  .ref{font-size:.79rem;opacity:.65;margin-top:12px;line-height:1.5;}
+
+  .disclaimer{background:#f0f0f0;border-radius:8px;padding:13px 16px;margin-top:14px;font-size:.81rem;color:#888;line-height:1.5;}
+  footer{text-align:center;padding:20px;color:#bbb;font-size:.77rem;}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 AUDIT Screener</h1>
+  <p>GSEM 141 — Understanding Alcohol Use Disorder · Samantha Skinner, PhD Candidate</p>
+</header>
+<div class="container">
+  <div class="intro">
+    <h2>Alcohol Use Disorders Identification Test (WHO)</h2>
+    <p>10 questions about your drinking over the <strong>past 12 months</strong>. Takes ~3 minutes. <strong>Completely anonymous</strong> — your answers never leave your device. Tap the option that best describes you for each question.</p>
+  </div>
+
+  <div class="progress" id="prog"></div>
+  <div id="qs"></div>
+
+  <div class="actions">
+    <button class="btn" onclick="submit()">Get My Score</button>
+    <button class="btn reset" onclick="reset()">Reset</button>
+  </div>
+
+  <div class="result" id="res"></div>
+
+  <div class="disclaimer">
+    This tool is for <strong>educational purposes only</strong> and is not a clinical diagnosis. If you have concerns about your drinking, speak with a healthcare provider or contact SAMHSA: <strong>1-800-662-4357</strong> (free, confidential, 24/7).
+  </div>
+</div>
+<footer>GSEM 141 · Disease of the Brain · USC · Source: Babor et al., WHO (2001)</footer>
+
+<script>
+const QS=[
+  {q:"How often do you have a drink containing alcohol?",
+   opts:["Never","Monthly or less","2–4 times/month","2–3 times/week","4+ times/week"],sc:[0,1,2,3,4]},
+  {q:"How many standard drinks do you have on a typical drinking day?",
+   opts:["1–2","3–4","5–6","7–9","10+"],sc:[0,1,2,3,4]},
+  {q:"How often do you have 6 or more drinks on one occasion?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"How often in the last year have you found you were unable to stop drinking once you started?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"How often in the last year have you failed to do what was normally expected of you because of drinking?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"How often in the last year have you needed a drink in the morning to get yourself going after a heavy session?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"How often in the last year have you had a feeling of guilt or remorse after drinking?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"How often in the last year have you been unable to remember what happened the night before because of drinking?",
+   opts:["Never","Less than monthly","Monthly","Weekly","Daily or almost daily"],sc:[0,1,2,3,4]},
+  {q:"Have you or someone else been injured as a result of your drinking?",
+   opts:["No","Yes, but not in the last year","Yes, during the last year"],sc:[0,2,4]},
+  {q:"Has a relative, friend, doctor, or other health worker expressed concern about your drinking or suggested you cut down?",
+   opts:["No","Yes, but not in the last year","Yes, during the last year"],sc:[0,2,4]}
+];
+
+let answers=new Array(10).fill(null);
+
+function build(){
+  answers.fill(null);
+  const prog=document.getElementById('prog');
+  const qs=document.getElementById('qs');
+  prog.innerHTML=''; qs.innerHTML='';
+  QS.forEach((q,qi)=>{
+    const dot=document.createElement('div');
+    dot.className='dot'; dot.id='d'+qi;
+    prog.appendChild(dot);
+    const optsHtml=q.opts.map((o,oi)=>`<button class="opt" id="o${qi}_${oi}" onclick="sel(${qi},${oi})">${o}</button>`).join('');
+    const card=document.createElement('div');
+    card.className='qcard';
+    card.innerHTML=`<div class="qhead"><div class="qnum">${qi+1}</div><div class="qtext">${q.q}</div></div><div class="opts">${optsHtml}</div>`;
+    qs.appendChild(card);
+  });
+}
+
+function sel(qi,oi){
+  QS[qi].opts.forEach((_,i)=>{document.getElementById('o'+qi+'_'+i).classList.remove('sel');});
+  document.getElementById('o'+qi+'_'+oi).classList.add('sel');
+  answers[qi]=oi;
+  document.getElementById('d'+qi).classList.add('done');
+}
+
+function submit(){
+  const ua=answers.filter(a=>a===null).length;
+  if(ua>0){alert('Please answer all 10 questions. You have '+ua+' unanswered.');return;}
+  let total=0;
+  answers.forEach((a,qi)=>{total+=QS[qi].sc[a];});
+  const res=document.getElementById('res');
+  let cls,badge,detail;
+  if(total<=7){
+    cls='r0';badge='🟢 Low Risk';
+    detail=`Your score of <strong>${total}</strong> (range 0–7) suggests your drinking is unlikely to be causing significant harm. "Low risk" is not "no risk" — any alcohol use carries some health risk, particularly for people under 21, pregnant individuals, or those on medications.`;
+  }else if(total<=15){
+    cls='r1';badge='🟡 Hazardous / Medium Risk';
+    detail=`Your score of <strong>${total}</strong> (range 8–15) suggests hazardous drinking — patterns that increase your risk for health and social problems. Brief counseling or a conversation with a healthcare provider is recommended at this level.`;
+  }else if(total<=19){
+    cls='r2';badge='🟠 Harmful / High Risk';
+    detail=`Your score of <strong>${total}</strong> (range 16–19) indicates harmful drinking. You may already be experiencing health or social consequences. Referral to a specialist is recommended. This range often corresponds to alcohol dependence.`;
+  }else{
+    cls='r3';badge='🔴 Likely Dependence';
+    detail=`Your score of <strong>${total}</strong> (range 20+) strongly suggests alcohol dependence and warrants a full clinical assessment. Please consider reaching out to a healthcare provider or SAMHSA: <strong>1-800-662-4357</strong>.`;
+  }
+  res.className='result show '+cls;
+  res.innerHTML=`
+    <div class="score-big">${total}</div>
+    <div class="score-of">out of 40</div>
+    <div class="badge">${badge}</div>
+    <div class="breakdown">${detail}</div>
+    <div class="ref">Score guide: 0–7 = Low risk &nbsp;|&nbsp; 8–15 = Hazardous &nbsp;|&nbsp; 16–19 = Harmful &nbsp;|&nbsp; 20+ = Likely dependence<br>
+    Sensitivity ~92%, Specificity ~93% at threshold ≥8 (Reinert &amp; Allen, 2007)<br>
+    Source: Babor TF et al. AUDIT: The Alcohol Use Disorders Identification Test. WHO Press, 2001.</div>
+  `;
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function reset(){
+  build();
+  const res=document.getElementById('res');
+  res.className='result'; res.innerHTML='';
+}
+
+build();
+</script>
+</body>
+</html>
